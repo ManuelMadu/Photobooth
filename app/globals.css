@@ -1,26 +1,182 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ----------------------------------------------------------------------------
+   Vibe token system
+   Semantic tokens are mapped into Tailwind once (here), then re-bound at
+   runtime by [data-vibe="…"] selectors below. Switching the data-vibe
+   attribute on any wrapper re-skins everything inside it. The `inline`
+   keyword makes Tailwind reference the variables directly, so this is live.
+---------------------------------------------------------------------------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-num: var(--font-num);
+
+  --radius-vibe: var(--radius);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Neutral baseline (the picker uses its own hard-coded shell). */
+:root {
+  --bg: #0a0b0d;
+  --surface: #131519;
+  --surface-2: #1c1f24;
+  --ink: #eceef0;
+  --ink-dim: #8b919b;
+  --line: rgb(255 255 255 / 0.1);
+  --accent: #f59e0b;
+  --accent-ink: #0a0b0d;
+  --radius: 4px;
+
+  --font-display: var(--font-jetbrains);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-jetbrains);
+
+  --grain: 0;
+}
+
+/* --- Cinematic: near-black pro-camera HUD, mono, amber, sharp ------------- */
+[data-vibe="cinematic"] {
+  --bg: #0a0b0d;
+  --surface: #131519;
+  --surface-2: #1c1f24;
+  --ink: #eceef0;
+  --ink-dim: #8b919b;
+  --line: rgb(255 255 255 / 0.1);
+  --accent: #f59e0b;
+  --accent-ink: #0a0b0d;
+  --radius: 4px;
+  --font-display: var(--font-jetbrains);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-jetbrains);
+  --grain: 0;
+}
+
+/* --- Gallery: warm paper, monochrome, grotesk, museum-sharp --------------- */
+[data-vibe="gallery"] {
+  --bg: #f3f0e9;
+  --surface: #faf8f2;
+  --surface-2: #ece7dc;
+  --ink: #1b1814;
+  --ink-dim: #6c655b;
+  --line: rgb(27 24 20 / 0.16);
+  --accent: #1b1814;
+  --accent-ink: #f3f0e9;
+  --radius: 2px;
+  --font-display: var(--font-space);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-space);
+  --grain: 0;
+}
+
+/* --- Pop: dark plum, hot rose, chunky display, grain ---------------------- */
+[data-vibe="pop"] {
+  --bg: #0f0d12;
+  --surface: #1a1620;
+  --surface-2: #241d2c;
+  --ink: #f6f1f4;
+  --ink-dim: #a89db0;
+  --line: rgb(255 255 255 / 0.1);
+  --accent: #e11d48;
+  --accent-ink: #ffffff;
+  --radius: 18px;
+  --font-display: var(--font-bricolage);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-geist);
+  --grain: 1;
+}
+
+/* --- Glass: deep aurora base, white ink, frosted pods, very round --------- */
+[data-vibe="glass"] {
+  --bg: #0a1228;
+  --surface: rgb(255 255 255 / 0.1);
+  --surface-2: rgb(255 255 255 / 0.16);
+  --ink: #ffffff;
+  --ink-dim: rgb(255 255 255 / 0.72);
+  --line: rgb(255 255 255 / 0.24);
+  --accent: #ffffff;
+  --accent-ink: #0a1228;
+  --radius: 26px;
+  --font-display: var(--font-geist);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-geist);
+  --grain: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ----------------------------------------------------------------------------
+   Shared vibe surface treatments
+---------------------------------------------------------------------------- */
+
+/* Frosted glass pod (glass vibe). Falls back to solid when the user asks
+   for reduced transparency. */
+.vibe-glass {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    0 24px 70px rgb(0 0 0 / 0.35);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .vibe-glass {
+    background: #101a36;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Aurora backdrop for the glass vibe. Restrained teal/indigo, not AI-slop. */
+.vibe-aurora {
+  background:
+    radial-gradient(60% 55% at 18% 12%, rgb(56 189 248 / 0.45), transparent 60%),
+    radial-gradient(55% 50% at 88% 22%, rgb(129 140 248 / 0.42), transparent 62%),
+    radial-gradient(70% 60% at 70% 95%, rgb(45 212 191 / 0.32), transparent 60%),
+    linear-gradient(180deg, #0a1228, #0a0f20);
+}
+
+/* Film grain overlay (pop vibe). Fixed + pointer-events-none so it never
+   touches scroll/paint cost on real content. */
+.vibe-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Mirror the live selfie preview without affecting the exported frame. */
+.mirror {
+  transform: scaleX(-1);
+}
+
+/* Honor reduced motion globally: collapse transitions/animations to instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

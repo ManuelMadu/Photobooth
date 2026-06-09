@@ -1,0 +1,88 @@
+// Canvas capture + export helpers. The live preview is mirrored for selfie
+// comfort, but we export UN-mirrored so any text in frame reads correctly
+// (per the PDD edge-case note).
+
+export type Ratio = "1:1" | "4:3";
+
+/** width / height for a given ratio in portrait-friendly booth orientation. */
+export function ratioValue(ratio: Ratio): number {
+  return ratio === "1:1" ? 1 : 4 / 3;
+}
+
+/**
+ * Grab the current video frame, center-cropped to the target ratio, and return
+ * a JPEG data URL. Always un-mirrored regardless of facing camera.
+ */
+export function captureFrame(video: HTMLVideoElement, ratio: Ratio): string {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (!vw || !vh) return "";
+
+  const target = ratioValue(ratio);
+  const sourceAr = vw / vh;
+
+  let cw = vw;
+  let ch = vh;
+  if (sourceAr > target) {
+    cw = vh * target;
+    ch = vh;
+  } else {
+    cw = vw;
+    ch = vw / target;
+  }
+  const sx = (vw - cw) / 2;
+  const sy = (vh - ch) / 2;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(cw);
+  canvas.height = Math.round(ch);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(video, sx, sy, cw, ch, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.92);
+}
+
+/** Trigger a browser download for a data-URL image. */
+export function downloadImage(dataUrl: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/** booth-YYYYMMDD-HHMMSS.jpg */
+export function photoFilename(prefix = "booth"): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(
+    d.getHours(),
+  )}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  return `${prefix}-${stamp}.jpg`;
+}
+
+/** Short shutter click via WebAudio. No asset needed; safe to call freely. */
+export function playShutter() {
+  try {
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(1100, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.13);
+    osc.onended = () => ctx.close();
+  } catch {
+    /* audio unavailable; non-fatal */
+  }
+}
