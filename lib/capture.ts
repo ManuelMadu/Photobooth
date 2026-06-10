@@ -11,17 +11,18 @@ export function ratioValue(ratio: Ratio): number {
 
 /**
  * Grab the current video frame, center-cropped to the target ratio, and return
- * a JPEG data URL. Pass `mirror` to flip horizontally (front camera) so the
- * saved photo matches the mirrored live preview.
+ * it as a canvas (so callers can composite a frame onto it before export).
+ * Pass `mirror` to flip horizontally (front camera) so the saved photo matches
+ * the mirrored live preview. Returns null if the video has no frame yet.
  */
-export function captureFrame(
+export function cropFrame(
   video: HTMLVideoElement,
   ratio: Ratio,
   mirror = false,
-): string {
+): HTMLCanvasElement | null {
   const vw = video.videoWidth;
   const vh = video.videoHeight;
-  if (!vw || !vh) return "";
+  if (!vw || !vh) return null;
 
   const target = ratioValue(ratio);
   const sourceAr = vw / vh;
@@ -42,13 +43,13 @@ export function captureFrame(
   canvas.width = Math.round(cw);
   canvas.height = Math.round(ch);
   const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
+  if (!ctx) return null;
   if (mirror) {
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
   }
   ctx.drawImage(video, sx, sy, cw, ch, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.92);
+  return canvas;
 }
 
 /** Trigger a browser download for a data-URL image. */

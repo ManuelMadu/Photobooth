@@ -17,12 +17,13 @@ import {
 } from "@phosphor-icons/react";
 import { useCamera } from "@/hooks/use-camera";
 import {
-  captureFrame,
+  cropFrame,
   downloadImage,
   photoFilename,
   playShutter,
   type Ratio,
 } from "@/lib/capture";
+import { frameToDataURL } from "@/lib/frames";
 import { useVibe } from "@/components/vibe-provider";
 import { getVibe, VIBES, type VibeId } from "@/lib/vibes";
 import { PermissionState } from "./permission-state";
@@ -69,14 +70,14 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
     }
     if (sound) playShutter();
     const video = videoRef.current;
-    const data = video ? captureFrame(video, ratio, facing === "user") : "";
-    if (!data) {
+    const crop = video ? cropFrame(video, ratio, facing === "user") : null;
+    if (!crop) {
       setPhase("live");
       return;
     }
-    setPhoto(data);
+    setPhoto(frameToDataURL(crop, vibe));
     schedule(() => setPhase("review"), flashOn ? 150 : 0);
-  }, [clearTimers, schedule, flashOn, sound, ratio, facing, videoRef]);
+  }, [clearTimers, schedule, flashOn, sound, ratio, facing, vibe, videoRef]);
 
   const capture = useCallback(() => {
     if (phase !== "live" || status !== "ready") return;
@@ -184,7 +185,7 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
       {/* ---- Stage ---- */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6">
         {phase === "review" && photo ? (
-          <Review src={photo} ratio={ratio} onRetake={retake} onKeep={keep} />
+          <Review src={photo} onRetake={retake} onKeep={keep} />
         ) : (
           <div className="flex w-full flex-col items-center gap-6">
             {isPurikura ? (

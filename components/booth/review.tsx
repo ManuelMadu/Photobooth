@@ -2,17 +2,14 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowCounterClockwise, DownloadSimple, Check } from "@phosphor-icons/react";
-import type { Ratio } from "@/lib/capture";
 
 /** Preview + retake / keep, shown after a capture. */
 export function Review({
   src,
-  ratio,
   onRetake,
   onKeep,
 }: {
   src: string;
-  ratio: Ratio;
   onRetake: () => void;
   onKeep: () => void;
 }) {
@@ -24,11 +21,15 @@ export function Review({
         initial={reduce ? false : { opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-[min(80vh,560px)] overflow-hidden rounded-vibe bg-surface ring-1 ring-line"
-        style={{ aspectRatio: ratio === "1:1" ? "1 / 1" : "4 / 3" }}
+        className="relative flex max-h-[68vh] w-full items-center justify-center"
       >
+        {/* The frame is baked into the image; show it whole, no cropping. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="Your captured photo" className="h-full w-full object-cover" />
+        <img
+          src={src}
+          alt="Your framed photo"
+          className="block h-auto max-h-[68vh] w-auto max-w-[min(90vw,520px)] rounded-[4px] shadow-[0_24px_60px_rgb(0_0_0/0.22)]"
+        />
       </motion.div>
 
       <div className="flex items-center gap-3">
