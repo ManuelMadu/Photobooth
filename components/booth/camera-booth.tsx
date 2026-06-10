@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowLeft,
   ArrowsClockwise,
@@ -10,6 +11,9 @@ import {
   Lightning,
   LightningSlash,
   Timer,
+  Heart,
+  Star,
+  Sparkle,
 } from "@phosphor-icons/react";
 import { useCamera } from "@/hooks/use-camera";
 import {
@@ -65,14 +69,14 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
     }
     if (sound) playShutter();
     const video = videoRef.current;
-    const data = video ? captureFrame(video, ratio) : "";
+    const data = video ? captureFrame(video, ratio, facing === "user") : "";
     if (!data) {
       setPhase("live");
       return;
     }
     setPhoto(data);
     schedule(() => setPhase("review"), flashOn ? 150 : 0);
-  }, [clearTimers, schedule, flashOn, sound, ratio, videoRef]);
+  }, [clearTimers, schedule, flashOn, sound, ratio, facing, videoRef]);
 
   const capture = useCallback(() => {
     if (phase !== "live" || status !== "ready") return;
@@ -122,7 +126,7 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
 
   const meta = getVibe(vibe);
   const aspect = ratio === "1:1" ? "1 / 1" : "4 / 3";
-  const isGlass = vibe === "glass";
+  const isPurikura = vibe === "purikura";
   const cycleCountdown = () =>
     setCountdownSec((c) => (c === 0 ? 3 : c === 3 ? 5 : 0));
 
@@ -137,27 +141,6 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
           status === "ready" ? "opacity-100" : "opacity-0"
         } transition-opacity duration-500`}
       />
-
-      {/* cinematic focus brackets + readout */}
-      {vibe === "cinematic" && status === "ready" && phase !== "review" && (
-        <>
-          <Bracket className="left-3 top-3 border-l-2 border-t-2" />
-          <Bracket className="right-3 top-3 border-r-2 border-t-2" />
-          <Bracket className="bottom-3 left-3 border-b-2 border-l-2" />
-          <Bracket className="bottom-3 right-3 border-b-2 border-r-2" />
-          <div className="absolute left-4 top-4 flex items-center gap-1.5">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-            <span className="font-num text-[11px] tracking-widest text-white/90">
-              REC
-            </span>
-          </div>
-          <div className="absolute inset-x-4 bottom-3 flex justify-between font-num text-[11px] tracking-widest text-white/70">
-            <span>{ratio}</span>
-            <span>{facing === "user" ? "FRONT" : "BACK"}</span>
-            <span>READY</span>
-          </div>
-        </>
-      )}
 
       <Countdown value={countNum} />
 
@@ -180,91 +163,56 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   return (
     <div
       data-vibe={vibe}
-      className={`relative flex min-h-[100dvh] flex-col bg-bg text-ink ${
-        vibe === "pop" ? "vibe-grain" : ""
-      } ${isGlass ? "vibe-aurora" : ""}`}
+      className={`relative flex min-h-[100dvh] flex-col text-ink ${
+        isPurikura ? "vibe-candy" : "vibe-paper"
+      }`}
     >
       {/* ---- Top bar ---- */}
-      <header
-        className={`relative z-20 flex items-center justify-between gap-3 px-4 py-3 sm:px-6 ${
-          isGlass ? "" : "border-b border-line"
-        }`}
-      >
+      <header className="relative z-20 flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={() => router.push("/")}
-          className={`inline-flex items-center gap-2 rounded-vibe px-3 py-2 font-num text-sm text-ink transition-transform active:scale-[0.97] ${
-            isGlass ? "vibe-glass" : "bg-surface ring-1 ring-line"
-          }`}
+          className="inline-flex items-center gap-2 rounded-vibe bg-surface px-3 py-2 font-num text-sm text-ink ring-1 ring-line transition-transform active:scale-[0.97]"
         >
           <ArrowLeft size={16} weight="bold" />
           <span className="hidden sm:inline">Change look</span>
         </button>
 
-        <VibeSwitch current={vibe} onPick={setVibe} glass={isGlass} />
+        <VibeSwitch current={vibe} onPick={setVibe} />
       </header>
 
       {/* ---- Stage ---- */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6">
         {phase === "review" && photo ? (
           <Review src={photo} ratio={ratio} onRetake={retake} onKeep={keep} />
-        ) : isGlass ? (
-          // full-bleed video lives behind everything for glass
-          <div className="flex w-full flex-1 items-center justify-center">
-            <div className="fixed inset-0 -z-10">
-              {stageInner}
-            </div>
-          </div>
         ) : (
-          <div className="flex w-full flex-col items-center gap-5">
-            {vibe === "gallery" && (
-              <p className="font-display text-3xl text-ink sm:text-4xl">The Studio</p>
+          <div className="flex w-full flex-col items-center gap-6">
+            {isPurikura ? (
+              <>
+                <PurikuraTitle />
+                <PurikuraFrame aspect={aspect}>{stageInner}</PurikuraFrame>
+              </>
+            ) : (
+              <VintageFrame aspect={aspect}>{stageInner}</VintageFrame>
             )}
-            {vibe === "pop" && (
-              <p className="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
-                Say cheese.
-              </p>
-            )}
-            <div
-              className={`relative w-full max-w-[min(72vh,540px)] overflow-hidden rounded-vibe ${
-                vibe === "gallery"
-                  ? "bg-surface-2 p-3 ring-1 ring-line"
-                  : "bg-surface ring-1 ring-line"
-              }`}
-            >
-              <div
-                className="relative w-full overflow-hidden rounded-[calc(var(--radius)-2px)]"
-                style={{ aspectRatio: aspect }}
-              >
-                {stageInner}
-              </div>
-            </div>
           </div>
         )}
       </main>
 
       {/* ---- Controls ---- */}
       {phase !== "review" && (
-        <footer
-          className={`relative z-20 px-4 pb-6 pt-3 sm:px-6 ${
-            isGlass ? "pointer-events-none" : ""
-          }`}
-        >
-          <div
-            className={`mx-auto flex max-w-2xl items-center justify-between gap-3 ${
-              isGlass
-                ? "vibe-glass pointer-events-auto rounded-full px-3 py-3"
-                : ""
-            }`}
-          >
+        <footer className="relative z-20 px-4 pb-6 pt-3 sm:px-6">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
             {/* left settings cluster */}
             <div className="flex items-center gap-2">
-              <Pill onClick={() => setRatio((r) => (r === "1:1" ? "4:3" : "1:1"))} glass={isGlass} label={ratio}>
+              <Pill
+                onClick={() => setRatio((r) => (r === "1:1" ? "4:3" : "1:1"))}
+                label={`Aspect ratio ${ratio}`}
+              >
                 <span className="font-num text-xs">{ratio}</span>
               </Pill>
               <Pill
                 onClick={cycleCountdown}
-                glass={isGlass}
                 active={countdownSec !== 0}
                 label="Countdown"
               >
@@ -288,14 +236,22 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
 
             {/* right cluster */}
             <div className="flex items-center gap-2">
-              <Pill onClick={() => setFlashOn((f) => !f)} glass={isGlass} active={flashOn} label="Flash">
-                {flashOn ? <Lightning size={18} weight="fill" /> : <LightningSlash size={18} weight="bold" />}
+              <Pill onClick={() => setFlashOn((f) => !f)} active={flashOn} label="Flash">
+                {flashOn ? (
+                  <Lightning size={18} weight="fill" />
+                ) : (
+                  <LightningSlash size={18} weight="bold" />
+                )}
               </Pill>
-              <Pill onClick={() => setSound((s) => !s)} glass={isGlass} active={sound} label="Sound">
-                {sound ? <SpeakerSimpleHigh size={18} weight="bold" /> : <SpeakerSimpleX size={18} weight="bold" />}
+              <Pill onClick={() => setSound((s) => !s)} active={sound} label="Sound">
+                {sound ? (
+                  <SpeakerSimpleHigh size={18} weight="bold" />
+                ) : (
+                  <SpeakerSimpleX size={18} weight="bold" />
+                )}
               </Pill>
               {hasMultiple && (
-                <Pill onClick={flip} glass={isGlass} label="Flip camera">
+                <Pill onClick={flip} label="Flip camera">
                   <ArrowsClockwise size={18} weight="bold" />
                 </Pill>
               )}
@@ -307,20 +263,110 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   );
 }
 
-function Bracket({ className }: { className: string }) {
-  return <span aria-hidden className={`absolute z-30 h-7 w-7 border-accent ${className}`} />;
+/* ---- Vintage: a framed paper print with a typewriter caption strip ------- */
+function VintageFrame({
+  aspect,
+  children,
+}: {
+  aspect: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative w-full max-w-[min(70vh,520px)] rounded-vibe bg-surface p-3 pb-9 shadow-[0_28px_70px_rgb(43_32_24/0.3)] ring-1 ring-line">
+      <div
+        className="relative w-full overflow-hidden rounded-[2px] bg-surface-2"
+        style={{ aspectRatio: aspect }}
+      >
+        {children}
+      </div>
+      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-4 py-2.5 font-num text-[11px] uppercase tracking-[0.2em] text-ink-dim">
+        <span>Photo Booth</span>
+        <span aria-hidden>★ ★ ★</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Purikura: rounded sticker frame ringed with floating doodads -------- */
+function PurikuraFrame({
+  aspect,
+  children,
+}: {
+  aspect: string;
+  children: React.ReactNode;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <div className="relative w-full max-w-[min(70vh,520px)]">
+      <Doodad className="-left-3 -top-4 text-accent" delay={0} reduce={reduce}>
+        <Heart weight="fill" size={30} />
+      </Doodad>
+      <Doodad className="-right-2 -top-5 text-[#7cd6d6]" delay={0.5} reduce={reduce}>
+        <Star weight="fill" size={24} />
+      </Doodad>
+      <Doodad className="-left-4 bottom-10 text-[#b794f6]" delay={1} reduce={reduce}>
+        <Sparkle weight="fill" size={26} />
+      </Doodad>
+      <Doodad className="-right-3 bottom-6 text-accent" delay={1.5} reduce={reduce}>
+        <Star weight="fill" size={18} />
+      </Doodad>
+
+      <div className="relative rounded-vibe bg-surface p-2.5 shadow-[0_22px_60px_rgb(255_95_162/0.28)] ring-4 ring-accent/25">
+        <div
+          className="relative w-full overflow-hidden rounded-[16px] bg-surface-2"
+          style={{ aspectRatio: aspect }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Doodad({
+  className,
+  children,
+  delay,
+  reduce,
+}: {
+  className: string;
+  children: React.ReactNode;
+  delay: number;
+  reduce: boolean | null;
+}) {
+  return (
+    <motion.span
+      aria-hidden
+      className={`absolute z-20 drop-shadow-[0_3px_6px_rgb(255_95_162/0.35)] ${className}`}
+      animate={reduce ? undefined : { y: [0, -7, 0], rotate: [-8, 8, -8] }}
+      transition={
+        reduce
+          ? undefined
+          : { duration: 3.6, delay, repeat: Infinity, ease: "easeInOut" }
+      }
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function PurikuraTitle() {
+  return (
+    <p className="flex items-center gap-2 font-display text-3xl font-semibold text-ink sm:text-4xl">
+      Say cheese
+      <Heart weight="fill" size={26} className="text-accent" />
+    </p>
+  );
 }
 
 function Pill({
   children,
   onClick,
-  glass,
   active,
   label,
 }: {
   children: React.ReactNode;
   onClick: () => void;
-  glass?: boolean;
   active?: boolean;
   label: string;
 }) {
@@ -329,12 +375,10 @@ function Pill({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`inline-flex h-11 items-center gap-1.5 rounded-vibe px-3 text-ink transition-transform active:scale-[0.95] ${
+      className={`inline-flex h-11 items-center gap-1.5 rounded-vibe px-3 transition-transform active:scale-[0.95] ${
         active
           ? "bg-accent text-accent-ink"
-          : glass
-            ? "vibe-glass"
-            : "bg-surface ring-1 ring-line"
+          : "bg-surface text-ink ring-1 ring-line"
       }`}
     >
       {children}
@@ -345,17 +389,14 @@ function Pill({
 function VibeSwitch({
   current,
   onPick,
-  glass,
 }: {
   current: VibeId;
   onPick: (v: VibeId) => void;
-  glass?: boolean;
 }) {
+  const reduce = useReducedMotion();
   return (
     <div
-      className={`flex items-center gap-1 rounded-full p-1 ${
-        glass ? "vibe-glass" : "bg-surface ring-1 ring-line"
-      }`}
+      className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-line"
       role="group"
       aria-label="Switch booth look"
     >
@@ -367,11 +408,27 @@ function VibeSwitch({
             type="button"
             onClick={() => onPick(v.id)}
             aria-pressed={isCurrent}
-            className={`rounded-full px-2.5 py-1.5 font-num text-[11px] tracking-wide transition-colors sm:px-3 ${
-              isCurrent ? "bg-accent text-accent-ink" : "text-ink-dim hover:text-ink"
-            }`}
+            className="relative rounded-full px-3 py-1.5 font-num text-[11px] tracking-wide outline-none focus-visible:ring-2 focus-visible:ring-accent sm:px-3.5"
           >
-            {v.name}
+            {isCurrent && (
+              <motion.span
+                aria-hidden
+                layoutId="vibe-switch-active"
+                transition={
+                  reduce
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 34 }
+                }
+                className="absolute inset-0 rounded-full bg-accent"
+              />
+            )}
+            <span
+              className={`relative z-10 transition-colors ${
+                isCurrent ? "text-accent-ink" : "text-ink-dim hover:text-ink"
+              }`}
+            >
+              {v.name}
+            </span>
           </button>
         );
       })}

@@ -1,6 +1,6 @@
-// Canvas capture + export helpers. The live preview is mirrored for selfie
-// comfort, but we export UN-mirrored so any text in frame reads correctly
-// (per the PDD edge-case note).
+// Canvas capture + export helpers. The live selfie preview is mirrored for
+// comfort, so we mirror the front-camera capture to match it — what you see is
+// what you get. The back camera is captured as-is.
 
 export type Ratio = "1:1" | "4:3";
 
@@ -11,9 +11,14 @@ export function ratioValue(ratio: Ratio): number {
 
 /**
  * Grab the current video frame, center-cropped to the target ratio, and return
- * a JPEG data URL. Always un-mirrored regardless of facing camera.
+ * a JPEG data URL. Pass `mirror` to flip horizontally (front camera) so the
+ * saved photo matches the mirrored live preview.
  */
-export function captureFrame(video: HTMLVideoElement, ratio: Ratio): string {
+export function captureFrame(
+  video: HTMLVideoElement,
+  ratio: Ratio,
+  mirror = false,
+): string {
   const vw = video.videoWidth;
   const vh = video.videoHeight;
   if (!vw || !vh) return "";
@@ -38,6 +43,10 @@ export function captureFrame(video: HTMLVideoElement, ratio: Ratio): string {
   canvas.height = Math.round(ch);
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
+  if (mirror) {
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
   ctx.drawImage(video, sx, sy, cw, ch, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL("image/jpeg", 0.92);
 }

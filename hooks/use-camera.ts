@@ -73,9 +73,13 @@ export function useCamera() {
   );
 
   useEffect(() => {
+    // Acquiring the camera is a legitimate external-system sync on mount;
+    // start() flips status synchronously, which the set-state-in-effect rule
+    // flags as a false positive here. Flip/retry drive re-acquisition.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     start("user");
     return stop;
-    // Run once on mount; flip/retry drive re-acquisition explicitly.
+    // Run once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

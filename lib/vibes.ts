@@ -1,8 +1,12 @@
-// The four design languages the booth can wear.
+// The design languages the booth can wear.
 // Each vibe is a token set bound at runtime via [data-vibe] in globals.css.
 // This module is the single source of truth for vibe identity + copy.
+//
+// We're intentionally running a small, opinionated set (two for now) rather
+// than a wide menu of mild variations. More can be added later by appending a
+// VibeId, a VIBES entry, and a [data-vibe] token block.
 
-export type VibeId = "cinematic" | "gallery" | "pop" | "glass";
+export type VibeId = "vintage" | "purikura";
 
 export interface Vibe {
   id: VibeId;
@@ -20,42 +24,28 @@ export interface Vibe {
 
 export const VIBES: Vibe[] = [
   {
-    id: "cinematic",
-    name: "Cinematic",
-    tagline: "Pro camera HUD",
-    blurb: "Near-black, mono readouts, focus brackets. Feels like a film-set monitor.",
-    sample: "REC",
-    flash: "#fff7e6",
+    id: "vintage",
+    name: "Vintage",
+    tagline: "Analog photo strip",
+    blurb:
+      "Warm paper, sepia ink, curtain-red. Your shot framed like a classic booth print.",
+    sample: "1952",
+    flash: "#fdf0d5",
   },
   {
-    id: "gallery",
-    name: "Gallery",
-    tagline: "Print-studio calm",
-    blurb: "Warm paper, big grotesk type, your shot framed like an artwork.",
-    sample: "Studio",
-    flash: "#ffffff",
-  },
-  {
-    id: "pop",
-    name: "Pop",
-    tagline: "Loud and playful",
-    blurb: "Chunky type, hot rose accent, a little grain. Party energy, done right.",
-    sample: "CHEESE",
-    flash: "#ffe3ee",
-  },
-  {
-    id: "glass",
-    name: "Glass",
-    tagline: "Frosted & full-bleed",
-    blurb: "Your face fills the screen; controls float as frosted glass pods.",
-    sample: "live",
+    id: "purikura",
+    name: "Purikura",
+    tagline: "Sticker-booth cute",
+    blurb:
+      "Candy pastels, bubbly type, hearts and sparkles. Tokyo arcade energy, maximum fun.",
+    sample: "cheese",
     flash: "#ffffff",
   },
 ];
 
 export const VIBE_IDS = VIBES.map((v) => v.id) as VibeId[];
 
-export const DEFAULT_VIBE: VibeId = "cinematic";
+export const DEFAULT_VIBE: VibeId = "vintage";
 
 export function getVibe(id: VibeId): Vibe {
   return VIBES.find((v) => v.id === id) ?? VIBES[0];

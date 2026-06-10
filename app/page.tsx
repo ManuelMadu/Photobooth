@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Aperture } from "@phosphor-icons/react";
+import { ArrowRight, Aperture, Heart, Star } from "@phosphor-icons/react";
 import { VIBES, type VibeId } from "@/lib/vibes";
 import { useVibe } from "@/components/vibe-provider";
 
@@ -94,58 +94,40 @@ export default function WelcomePage() {
    wrapper on the card already binds the tokens; this just stages each vibe's
    signature flourish. */
 function VibeMock({ id, sample }: { id: VibeId; sample: string }) {
-  if (id === "glass") {
+  if (id === "purikura") {
     return (
-      <div className="vibe-aurora relative aspect-[5/3] overflow-hidden rounded-vibe">
-        <div className="vibe-glass absolute inset-x-3 bottom-3 flex h-10 items-center gap-2 rounded-full px-3">
-          <span className="h-5 w-5 rounded-full bg-white shadow" />
-          <span className="font-num text-xs text-white/85">{sample}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "gallery") {
-    return (
-      <div className="aspect-[5/3] rounded-vibe bg-surface-2 p-3">
-        <div className="flex h-full w-full items-center justify-center border border-line bg-surface">
-          <span className="font-display text-3xl text-ink">{sample}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "pop") {
-    return (
-      <div className="relative flex aspect-[5/3] items-center justify-center overflow-hidden rounded-vibe bg-surface">
-        <span className="font-display text-3xl font-extrabold tracking-tight text-ink">
-          {sample}.
+      <div className="relative grid aspect-[5/3] place-items-center overflow-hidden rounded-vibe bg-surface ring-2 ring-accent/30">
+        <span className="font-display text-3xl font-semibold text-ink">
+          {sample}
         </span>
-        <span className="absolute bottom-3 right-3 h-6 w-6 rounded-full bg-accent" />
+        <Heart
+          weight="fill"
+          size={18}
+          className="absolute right-3 top-3 text-accent"
+        />
+        <Star
+          weight="fill"
+          size={16}
+          className="absolute bottom-3 left-3 text-[#7cd6d6]"
+        />
+        <Star
+          weight="fill"
+          size={12}
+          className="absolute right-5 bottom-4 text-[#b794f6]"
+        />
       </div>
     );
   }
 
-  // cinematic: focus brackets + REC dot + mono readout
+  // vintage: a framed paper print with a typewriter caption strip
   return (
-    <div className="relative aspect-[5/3] overflow-hidden rounded-vibe border border-line bg-surface">
-      <Bracket className="left-2 top-2 border-l border-t" />
-      <Bracket className="right-2 top-2 border-r border-t" />
-      <Bracket className="bottom-6 left-2 border-b border-l" />
-      <Bracket className="bottom-6 right-2 border-b border-r" />
-      <div className="absolute left-3 top-2.5 flex items-center gap-1.5">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-        <span className="font-num text-[10px] tracking-widest text-ink">{sample}</span>
-      </div>
-      <div className="absolute inset-x-3 bottom-2 font-num text-[10px] tracking-widest text-ink-dim">
-        1:1 · FRONT · READY
+    <div className="aspect-[5/3] rounded-vibe bg-surface p-2.5 pb-6 ring-1 ring-line shadow-[0_14px_40px_rgb(43_32_24/0.18)]">
+      <div className="relative flex h-full w-full items-center justify-center rounded-[2px] bg-surface-2">
+        <span className="font-display text-3xl text-ink">{sample}</span>
+        <span className="absolute -bottom-5 left-1 font-num text-[10px] uppercase tracking-[0.2em] text-ink-dim">
+          Photo Booth
+        </span>
       </div>
     </div>
-  );
-}
-
-function Bracket({ className }: { className: string }) {
-  return (
-    <span aria-hidden className={`absolute h-4 w-4 border-accent ${className}`} />
   );
 }
