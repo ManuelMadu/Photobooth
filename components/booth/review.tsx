@@ -7,15 +7,19 @@ import {
   DownloadSimple,
   Check,
   WarningCircle,
+  Heart,
 } from "@phosphor-icons/react";
+import type { VibeId } from "@/lib/vibes";
 
 /** Preview + retake / keep, shown after a capture. */
 export function Review({
   src,
+  vibe,
   onRetake,
   onKeep,
 }: {
   src: string;
+  vibe: VibeId;
   onRetake: () => void;
   /** Returns false if the browser refused the download. */
   onKeep: () => boolean;
@@ -62,21 +66,32 @@ export function Review({
   }, [saved, handleKeep, onRetake]);
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-6">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-5">
       <motion.div
         initial={reduce ? false : { opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex max-h-[68vh] w-full items-center justify-center"
+        className="relative flex max-h-[64vh] w-full items-center justify-center"
       >
         {/* The frame is baked into the image; show it whole, no cropping. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt="Your framed photo"
-          className="block h-auto max-h-[68vh] w-auto max-w-[min(90vw,520px)] rounded-[4px] shadow-[0_24px_60px_rgb(0_0_0/0.22)]"
+          className="block h-auto max-h-[64vh] w-auto max-w-[min(90vw,520px)] rounded-[4px] shadow-[0_24px_60px_rgb(0_0_0/0.22)]"
         />
       </motion.div>
+
+      <p className="flex items-center gap-1.5 font-display text-xl text-ink sm:text-2xl">
+        {vibe === "purikura" ? (
+          <>
+            So cute
+            <Heart weight="fill" size={20} className="text-accent" />
+          </>
+        ) : (
+          "Hot off the press"
+        )}
+      </p>
 
       <div className="flex items-center gap-3">
         <button

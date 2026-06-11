@@ -27,7 +27,7 @@ export function Countdown({ value }: { value: number | null }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={reduce ? { opacity: 0 } : { scale: 0.7, opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="select-none font-num text-[26vw] font-bold leading-none text-white drop-shadow-[0_6px_30px_rgb(0_0_0_/0.6)] sm:text-[180px]"
+            className="select-none font-display text-[26vw] leading-none text-white drop-shadow-[0_6px_30px_rgb(0_0_0_/0.6)] sm:text-[180px]"
           >
             {value}
           </motion.span>

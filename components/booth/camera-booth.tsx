@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import {
@@ -196,16 +196,21 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
       {/* ---- Stage ---- */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6">
         {phase === "review" && photo ? (
-          <Review src={photo} onRetake={retake} onKeep={keep} />
+          <Review src={photo} vibe={vibe} onRetake={retake} onKeep={keep} />
         ) : (
           <div className="flex w-full flex-col items-center gap-6">
             {isPurikura ? (
               <>
                 <PurikuraTitle />
-                <PurikuraFrame aspect={aspect}>{stageInner}</PurikuraFrame>
+                <PurikuraFrame aspect={aspect} animate={phase === "counting"}>
+                  {stageInner}
+                </PurikuraFrame>
               </>
             ) : (
-              <VintageFrame aspect={aspect}>{stageInner}</VintageFrame>
+              <>
+                <VintageTitle />
+                <VintageFrame aspect={aspect}>{stageInner}</VintageFrame>
+              </>
             )}
           </div>
         )}
@@ -216,7 +221,11 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
         <footer className="relative z-20 px-4 pb-6 pt-3 sm:px-6">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
             {/* left settings cluster */}
-            <div className="flex items-center gap-2">
+            <div
+              className={`flex items-center gap-2 transition-opacity ${
+                phase === "counting" ? "pointer-events-none opacity-40" : ""
+              }`}
+            >
               <Pill
                 onClick={() => setRatio((r) => (r === "1:1" ? "4:3" : "1:1"))}
                 label={`Aspect ratio ${ratio}`}
@@ -244,12 +253,22 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
                 aria-label="Take photo"
                 className="group relative grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full ring-2 ring-accent transition-transform active:scale-95 disabled:opacity-40 sm:h-[76px] sm:w-[76px]"
               >
-                <span className="h-[52px] w-[52px] rounded-full bg-accent transition-transform duration-150 group-active:scale-90 sm:h-[58px] sm:w-[58px]" />
+                {isPurikura ? (
+                  <span className="grid place-items-center text-accent transition-transform duration-150 group-active:scale-90">
+                    <Heart weight="fill" size={42} />
+                  </span>
+                ) : (
+                  <span className="h-[52px] w-[52px] rounded-full bg-accent transition-transform duration-150 group-active:scale-90 sm:h-[58px] sm:w-[58px]" />
+                )}
               </button>
             )}
 
             {/* right cluster */}
-            <div className="flex items-center gap-2">
+            <div
+              className={`flex items-center gap-2 transition-opacity ${
+                phase === "counting" ? "pointer-events-none opacity-40" : ""
+              }`}
+            >
               <Pill onClick={() => setFlashOn((f) => !f)} active={flashOn} label="Flash">
                 {flashOn ? (
                   <Lightning size={18} weight="fill" />
@@ -285,6 +304,19 @@ function VintageFrame({
   aspect: string;
   children: React.ReactNode;
 }) {
+  // Date stamped on the print, like a real booth strip. Day-level, so the SSR
+  // and client renders agree.
+  const stamp = useMemo(
+    () =>
+      new Date()
+        .toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        })
+        .toUpperCase(),
+    [],
+  );
   return (
     <div className="relative w-full max-w-[min(70vh,520px)] rounded-vibe bg-surface p-3 pb-9 shadow-[0_28px_70px_rgb(43_32_24/0.3)] ring-1 ring-line">
       <div
@@ -295,7 +327,7 @@ function VintageFrame({
       </div>
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-4 py-2.5 font-num text-[11px] uppercase tracking-[0.2em] text-ink-dim">
         <span>Photo Booth</span>
-        <span aria-hidden>★ ★ ★</span>
+        <span>{stamp}</span>
       </div>
     </div>
   );
@@ -304,24 +336,28 @@ function VintageFrame({
 /* ---- Purikura: rounded sticker frame ringed with floating doodads -------- */
 function PurikuraFrame({
   aspect,
+  animate,
   children,
 }: {
   aspect: string;
+  /** Float the doodads. Kept still while live so they don't fight framing. */
+  animate: boolean;
   children: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
+  const still = reduce || !animate;
   return (
     <div className="relative w-full max-w-[min(70vh,520px)]">
-      <Doodad className="-left-3 -top-4 text-accent" delay={0} reduce={reduce}>
+      <Doodad className="-left-3 -top-4 text-accent" delay={0} reduce={still}>
         <Heart weight="fill" size={30} />
       </Doodad>
-      <Doodad className="-right-2 -top-5 text-[#7cd6d6]" delay={0.5} reduce={reduce}>
+      <Doodad className="-right-2 -top-5 text-[#7cd6d6]" delay={0.5} reduce={still}>
         <Star weight="fill" size={24} />
       </Doodad>
-      <Doodad className="-left-4 bottom-10 text-[#b794f6]" delay={1} reduce={reduce}>
+      <Doodad className="-left-4 bottom-10 text-[#b794f6]" delay={1} reduce={still}>
         <Sparkle weight="fill" size={26} />
       </Doodad>
-      <Doodad className="-right-3 bottom-6 text-accent" delay={1.5} reduce={reduce}>
+      <Doodad className="-right-3 bottom-6 text-accent" delay={1.5} reduce={still}>
         <Star weight="fill" size={18} />
       </Doodad>
 
@@ -361,6 +397,14 @@ function Doodad({
     >
       {children}
     </motion.span>
+  );
+}
+
+function VintageTitle() {
+  return (
+    <p className="font-display text-3xl text-ink sm:text-4xl">
+      Step in, look alive
+    </p>
   );
 }
 
