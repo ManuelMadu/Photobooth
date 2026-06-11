@@ -20,7 +20,7 @@ export type Facing = "user" | "environment";
  * tracks on unmount and on every re-acquire (camera flip).
  */
 export function useCamera() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [status, setStatus] = useState<CameraStatus>("idle");
   const [facing, setFacing] = useState<Facing>("user");
@@ -93,5 +93,16 @@ export function useCamera() {
 
   const retry = useCallback(() => void start(facing), [start, facing]);
 
-  return { videoRef, status, facing, hasMultiple, flip, retry, stop };
+  // Callback ref: reattach the live stream whenever the <video> mounts. The
+  // element unmounts while the review screen is shown, so on return to live a
+  // fresh node mounts with an empty srcObject — without this it shows grey.
+  const attachVideo = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    if (node && streamRef.current && node.srcObject !== streamRef.current) {
+      node.srcObject = streamRef.current;
+      void node.play().catch(() => {});
+    }
+  }, []);
+
+  return { videoRef, attachVideo, status, facing, hasMultiple, flip, retry, stop };
 }

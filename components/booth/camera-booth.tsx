@@ -34,7 +34,8 @@ type CountdownSec = 0 | 3 | 5;
 
 export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const router = useRouter();
-  const { videoRef, status, facing, hasMultiple, flip, retry } = useCamera();
+  const { videoRef, attachVideo, status, facing, hasMultiple, flip, retry } =
+    useCamera();
 
   const [phase, setPhase] = useState<Phase>("live");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -143,7 +144,7 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const stageInner = (
     <>
       <video
-        ref={videoRef}
+        ref={attachVideo}
         playsInline
         muted
         autoPlay
