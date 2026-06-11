@@ -6,7 +6,7 @@
 // than a wide menu of mild variations. More can be added later by appending a
 // VibeId, a VIBES entry, and a [data-vibe] token block.
 
-export type VibeId = "vintage" | "purikura";
+export type VibeId = "vintage" | "polaroid" | "purikura";
 
 export interface Vibe {
   id: VibeId;
@@ -31,6 +31,15 @@ export const VIBES: Vibe[] = [
       "Warm paper, sepia ink, curtain-red. Your shot framed like a classic booth print.",
     sample: "1952",
     flash: "#fdf0d5",
+  },
+  {
+    id: "polaroid",
+    name: "Polaroid",
+    tagline: "Instant snapshot",
+    blurb:
+      "Crisp white film border with a handwritten caption and that just-developed look. Give it a shake.",
+    sample: "hello!",
+    flash: "#ffffff",
   },
   {
     id: "purikura",

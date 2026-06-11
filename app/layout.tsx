@@ -5,6 +5,7 @@ import {
   Courier_Prime,
   Fredoka,
   Quicksand,
+  Caveat,
 } from "next/font/google";
 import "./globals.css";
 import { VibeProvider } from "@/components/vibe-provider";
@@ -25,6 +26,12 @@ const typewriter = Courier_Prime({
 // Purikura: rounded bubbly display + a soft rounded body.
 const fredoka = Fredoka({ subsets: ["latin"], variable: "--font-fredoka" });
 const quicksand = Quicksand({ subsets: ["latin"], variable: "--font-rounded" });
+// Polaroid: a handwritten marker for the caption scrawled under the photo.
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-caveat",
+});
 
 export const metadata: Metadata = {
   title: "Booth — pick your vibe",
@@ -45,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body
-        className={`${geist.variable} ${serif.variable} ${typewriter.variable} ${fredoka.variable} ${quicksand.variable} min-h-full`}
+        className={`${geist.variable} ${serif.variable} ${typewriter.variable} ${fredoka.variable} ${quicksand.variable} ${caveat.variable} min-h-full`}
       >
         <VibeProvider>{children}</VibeProvider>
       </body>

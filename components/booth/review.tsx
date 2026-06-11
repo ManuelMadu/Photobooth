@@ -88,6 +88,8 @@ export function Review({
             So cute
             <Heart weight="fill" size={20} className="text-accent" />
           </>
+        ) : vibe === "polaroid" ? (
+          "Instant classic"
         ) : (
           "Hot off the press"
         )}

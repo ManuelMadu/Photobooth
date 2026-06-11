@@ -17,8 +17,14 @@ const JPEG_QUALITY = 0.92;
  * padding + caption / doodad margin), so callers should display it at its
  * natural size rather than re-cropping it.
  */
-export function frameToDataURL(photo: HTMLCanvasElement, vibe: VibeId): string {
-  return vibe === "purikura" ? purikura(photo) : vintage(photo);
+export function frameToDataURL(
+  photo: HTMLCanvasElement,
+  vibe: VibeId,
+  caption?: string,
+): string {
+  if (vibe === "purikura") return purikura(photo);
+  if (vibe === "polaroid") return polaroid(photo, caption);
+  return vintage(photo);
 }
 
 /* ---- Vintage: paper print with a typewriter caption strip ---------------- */
@@ -62,6 +68,83 @@ function vintage(photo: HTMLCanvasElement): string {
   ctx.fillText("★ ★ ★", w - pad, cy);
 
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+}
+
+/* ---- Polaroid: bright white film border with a handwritten caption ------- */
+function polaroid(photo: HTMLCanvasElement, caption?: string): string {
+  const iw = photo.width;
+  const ih = photo.height;
+  const side = Math.round(iw * 0.068);
+  const top = side;
+  const bottom = Math.round(iw * 0.25); // the thick scrawl-on-me bottom border
+  const w = iw + side * 2;
+  const h = ih + top + bottom;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return photo.toDataURL("image/jpeg", JPEG_QUALITY);
+
+  // Bright film white with a faint top sheen and a soft warmth pooling at the
+  // bottom, so the flat white reads as a physical print.
+  ctx.fillStyle = "#fdfdfb";
+  ctx.fillRect(0, 0, w, h);
+  radialBloom(ctx, w * 0.5, -h * 0.05, Math.max(w, h) * 0.6, "rgba(255,255,255,0.7)");
+  radialBloom(ctx, w * 0.5, h * 1.04, Math.max(w, h) * 0.45, "rgba(20,22,24,0.05)");
+
+  // Photo, dropped slightly into the window with a soft shadow line.
+  ctx.save();
+  ctx.shadowColor = "rgba(20,22,24,0.3)";
+  ctx.shadowBlur = Math.round(iw * 0.02);
+  ctx.shadowOffsetY = Math.round(iw * 0.007);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(side, top, iw, ih);
+  ctx.restore();
+  ctx.drawImage(photo, side, top, iw, ih);
+  ctx.strokeStyle = "rgba(20,22,24,0.12)";
+  ctx.lineWidth = Math.max(1, Math.round(iw * 0.003));
+  ctx.strokeRect(side + 0.5, top + 0.5, iw - 1, ih - 1);
+
+  // Handwritten caption in the bottom border. Defaults to the date.
+  const text = (caption ?? defaultCaption()).trim();
+  if (text) {
+    const fs = Math.round(iw * 0.085);
+    ctx.fillStyle = "#3a3b3d";
+    ctx.font = `400 ${fs}px ${resolveFontFamily("polaroid", "--font-display")}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    setLetterSpacing(ctx, 0);
+    ctx.save();
+    ctx.translate(w / 2, top + ih + bottom / 2 + fs * 0.04);
+    ctx.rotate(-0.02); // a touch off-level, like a real scrawl
+    ctx.fillText(fitText(ctx, text, w - side * 2), 0, 0);
+    ctx.restore();
+  }
+
+  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+}
+
+function defaultCaption(): string {
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/** Trim a caption with an ellipsis so it never spills past the border width. */
+function fitText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while (t.length > 1 && ctx.measureText(`${t}…`).width > maxWidth) {
+    t = t.slice(0, -1);
+  }
+  return `${t.trimEnd()}…`;
 }
 
 /* ---- Purikura: candy card ringed with floating sticker doodads ----------- */

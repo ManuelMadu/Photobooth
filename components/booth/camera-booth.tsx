@@ -140,6 +140,12 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const meta = getVibe(vibe);
   const aspect = ratio === "1:1" ? "1 / 1" : "4 / 3";
   const isPurikura = vibe === "purikura";
+  const backdrop =
+    vibe === "purikura"
+      ? "vibe-candy"
+      : vibe === "polaroid"
+        ? "vibe-snapshot"
+        : "vibe-paper";
 
   const stageInner = (
     <>
@@ -174,9 +180,7 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   return (
     <div
       data-vibe={vibe}
-      className={`relative flex min-h-[100dvh] flex-col text-ink ${
-        isPurikura ? "vibe-candy" : "vibe-paper"
-      }`}
+      className={`relative flex min-h-[100dvh] flex-col text-ink ${backdrop}`}
     >
       {/* ---- Top bar ---- */}
       <header className="relative z-20 flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-6">
@@ -196,12 +200,17 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
           <Review src={photo} vibe={vibe} onRetake={retake} onKeep={keep} />
         ) : (
           <div className="flex w-full flex-col items-center gap-6">
-            {isPurikura ? (
+            {vibe === "purikura" ? (
               <>
                 <PurikuraTitle />
                 <PurikuraFrame aspect={aspect} animate={phase === "counting"}>
                   {stageInner}
                 </PurikuraFrame>
+              </>
+            ) : vibe === "polaroid" ? (
+              <>
+                <PolaroidTitle />
+                <PolaroidFrame aspect={aspect}>{stageInner}</PolaroidFrame>
               </>
             ) : (
               <>
@@ -330,6 +339,44 @@ function VintageFrame({
   );
 }
 
+/* ---- Polaroid: white film border with a handwritten date under the photo - */
+function PolaroidFrame({
+  aspect,
+  children,
+}: {
+  aspect: string;
+  children: React.ReactNode;
+}) {
+  const stamp = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    [],
+  );
+  return (
+    <div
+      // Real Polaroid proportions: generous, even white on the sides + top, a
+      // much thicker bottom border for the caption. Percentage padding keeps the
+      // border-to-photo ratio fixed as the frame scales.
+      className="relative w-full max-w-[min(76vh,540px)] rounded-vibe bg-surface shadow-[0_30px_70px_rgb(20_22_24/0.32)] ring-1 ring-line"
+      style={{ padding: "6% 6% 22%" }}
+    >
+      <div
+        className="relative w-full overflow-hidden rounded-[2px] bg-surface-2"
+        style={{ aspectRatio: aspect }}
+      >
+        {children}
+      </div>
+      <p className="absolute inset-x-0 bottom-[7%] -rotate-1 text-center font-display text-3xl leading-none text-ink-dim sm:text-4xl">
+        {stamp}
+      </p>
+    </div>
+  );
+}
+
 /* ---- Purikura: rounded sticker frame ringed with floating doodads -------- */
 function PurikuraFrame({
   aspect,
@@ -402,6 +449,12 @@ function VintageTitle() {
     <p className="font-display text-3xl text-ink sm:text-4xl">
       Step in, look alive
     </p>
+  );
+}
+
+function PolaroidTitle() {
+  return (
+    <p className="font-display text-4xl text-ink sm:text-5xl">Hold still…</p>
   );
 }
 

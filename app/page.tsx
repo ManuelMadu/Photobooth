@@ -40,12 +40,12 @@ export default function WelcomePage() {
             Pick your booth.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
-            One photobooth, four personalities. Choose a look and start shooting.
-            You can switch it any time.
+            One photobooth, three personalities. Choose a look and start
+            shooting. You can switch it any time.
           </p>
         </header>
 
-        <ul className="mt-10 grid grid-cols-1 gap-5 sm:mt-14 sm:grid-cols-2">
+        <ul className="mt-10 grid grid-cols-1 gap-5 sm:mt-14 sm:grid-cols-2 lg:grid-cols-3">
           {VIBES.map((v, i) => (
             <motion.li
               key={v.id}
@@ -115,6 +115,21 @@ function VibeMock({ id, sample }: { id: VibeId; sample: string }) {
           size={12}
           className="absolute right-5 bottom-4 text-[#b794f6]"
         />
+      </div>
+    );
+  }
+
+  if (id === "polaroid") {
+    return (
+      <div className="aspect-[5/3] rounded-vibe bg-surface p-2.5 shadow-[0_14px_40px_rgb(20_22_24/0.22)] ring-1 ring-line">
+        <div className="flex h-full w-full flex-col gap-1.5">
+          <div className="grid flex-1 place-items-center rounded-[2px] bg-surface-2">
+            <Aperture size={30} weight="duotone" className="text-ink-dim" />
+          </div>
+          <span className="-rotate-1 text-center font-display text-xl leading-none text-ink">
+            {sample}
+          </span>
+        </div>
       </div>
     );
   }

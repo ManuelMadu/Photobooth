@@ -58,6 +58,22 @@
   --font-num: var(--font-typewriter);
 }
 
+/* --- Polaroid: cool desk-gray, bright white film, instant-blue, handwriting - */
+[data-vibe="polaroid"] {
+  --bg: #d9dadc;
+  --surface: #fdfdfb;
+  --surface-2: #e7e8ea;
+  --ink: #232425;
+  --ink-dim: #84878c;
+  --line: rgb(20 22 24 / 0.12);
+  --accent: #2f6f8f;
+  --accent-ink: #ffffff;
+  --radius: 6px;
+  --font-display: var(--font-caveat);
+  --font-body: var(--font-geist);
+  --font-num: var(--font-geist);
+}
+
 /* --- Purikura: candy pastels, bubblegum accent, rounded, very round ------- */
 [data-vibe="purikura"] {
   --bg: #fff0f6;
@@ -104,6 +120,14 @@ body {
   opacity: 0.06;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Polaroid: a cool tabletop — soft overhead light, gentle floor shadow. */
+.vibe-snapshot {
+  background:
+    radial-gradient(85% 60% at 50% -8%, rgb(255 255 255 / 0.7), transparent 60%),
+    radial-gradient(75% 55% at 50% 112%, rgb(20 22 24 / 0.07), transparent 60%),
+    linear-gradient(180deg, #e3e4e3, #d2d3d4);
 }
 
 /* Purikura: candy gradient sky — pink, mint, lilac. */
