@@ -24,8 +24,7 @@ import {
   type Ratio,
 } from "@/lib/capture";
 import { frameToDataURL } from "@/lib/frames";
-import { useVibe } from "@/components/vibe-provider";
-import { getVibe, VIBES, type VibeId } from "@/lib/vibes";
+import { getVibe, type VibeId } from "@/lib/vibes";
 import { PermissionState } from "./permission-state";
 import { Countdown } from "./countdown";
 import { Review } from "./review";
@@ -35,7 +34,6 @@ type CountdownSec = 0 | 3 | 5;
 
 export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const router = useRouter();
-  const { setVibe } = useVibe();
   const { videoRef, status, facing, hasMultiple, flip, retry } = useCamera();
 
   const [phase, setPhase] = useState<Phase>("live");
@@ -189,8 +187,6 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
           <Palette size={16} weight="bold" />
           <span>Change look</span>
         </button>
-
-        <VibeSwitch current={vibe} onPick={setVibe} />
       </header>
 
       {/* ---- Stage ---- */}
@@ -486,52 +482,3 @@ function TimerSegment({
   );
 }
 
-function VibeSwitch({
-  current,
-  onPick,
-}: {
-  current: VibeId;
-  onPick: (v: VibeId) => void;
-}) {
-  const reduce = useReducedMotion();
-  return (
-    <div
-      className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-line"
-      role="group"
-      aria-label="Switch booth look"
-    >
-      {VIBES.map((v) => {
-        const isCurrent = v.id === current;
-        return (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => onPick(v.id)}
-            aria-pressed={isCurrent}
-            className="relative rounded-full px-3 py-1.5 font-num text-[11px] tracking-wide outline-none focus-visible:ring-2 focus-visible:ring-accent sm:px-3.5"
-          >
-            {isCurrent && (
-              <motion.span
-                aria-hidden
-                layoutId="vibe-switch-active"
-                transition={
-                  reduce
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 420, damping: 34 }
-                }
-                className="absolute inset-0 rounded-full bg-accent"
-              />
-            )}
-            <span
-              className={`relative z-10 transition-colors ${
-                isCurrent ? "text-accent-ink" : "text-ink-dim hover:text-ink"
-              }`}
-            >
-              {v.name}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
