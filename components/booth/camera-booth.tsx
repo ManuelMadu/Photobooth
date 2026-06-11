@@ -4,13 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  ArrowLeft,
+  Palette,
   ArrowsClockwise,
   SpeakerSimpleHigh,
   SpeakerSimpleX,
   Lightning,
   LightningSlash,
-  Timer,
+  X,
   Heart,
   Star,
   Sparkle,
@@ -108,28 +108,39 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
     setPhase("live");
   }, [clearTimers]);
 
-  const keep = useCallback(() => {
-    if (photo) downloadImage(photo, photoFilename());
-    retake();
-  }, [photo, retake]);
+  // Abort an in-progress countdown and drop straight back to the live preview.
+  const cancelCountdown = useCallback(() => {
+    clearTimers();
+    setCountNum(null);
+    setPhase("live");
+  }, [clearTimers]);
 
-  // keyboard: space/enter captures while live
+  // Downloads only, reporting whether the browser accepted it. The Review screen
+  // owns the "saved" confirmation beat (or a failure fallback) and calls back to
+  // retake() once it's done, so the return-to-live isn't instant.
+  const keep = useCallback(
+    () => (photo ? downloadImage(photo, photoFilename()) : false),
+    [photo],
+  );
+
+  // keyboard: space/enter captures while live, escape aborts a countdown
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.code === "Space" || e.code === "Enter") && phase === "live") {
         e.preventDefault();
         capture();
+      } else if (e.code === "Escape" && phase === "counting") {
+        e.preventDefault();
+        cancelCountdown();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [capture, phase]);
+  }, [capture, phase, cancelCountdown]);
 
   const meta = getVibe(vibe);
   const aspect = ratio === "1:1" ? "1 / 1" : "4 / 3";
   const isPurikura = vibe === "purikura";
-  const cycleCountdown = () =>
-    setCountdownSec((c) => (c === 0 ? 3 : c === 3 ? 5 : 0));
 
   const stageInner = (
     <>
@@ -175,8 +186,8 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
           onClick={() => router.push("/")}
           className="inline-flex items-center gap-2 rounded-vibe bg-surface px-3 py-2 font-num text-sm text-ink ring-1 ring-line transition-transform active:scale-[0.97]"
         >
-          <ArrowLeft size={16} weight="bold" />
-          <span className="hidden sm:inline">Change look</span>
+          <Palette size={16} weight="bold" />
+          <span>Change look</span>
         </button>
 
         <VibeSwitch current={vibe} onPick={setVibe} />
@@ -212,28 +223,30 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
               >
                 <span className="font-num text-xs">{ratio}</span>
               </Pill>
-              <Pill
-                onClick={cycleCountdown}
-                active={countdownSec !== 0}
-                label="Countdown"
-              >
-                <Timer size={18} weight="bold" />
-                <span className="font-num text-xs">
-                  {countdownSec === 0 ? "Off" : `${countdownSec}s`}
-                </span>
-              </Pill>
+              <TimerSegment value={countdownSec} onChange={setCountdownSec} />
             </div>
 
-            {/* shutter */}
-            <button
-              type="button"
-              onClick={capture}
-              disabled={status !== "ready" || phase !== "live"}
-              aria-label="Take photo"
-              className="group relative grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full ring-2 ring-accent transition-transform active:scale-95 disabled:opacity-40 sm:h-[76px] sm:w-[76px]"
-            >
-              <span className="h-[52px] w-[52px] rounded-full bg-accent transition-transform duration-150 group-active:scale-90 sm:h-[58px] sm:w-[58px]" />
-            </button>
+            {/* shutter while live, cancel while counting */}
+            {phase === "counting" ? (
+              <button
+                type="button"
+                onClick={cancelCountdown}
+                aria-label="Cancel countdown"
+                className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-surface text-ink ring-2 ring-line transition-transform active:scale-95 sm:h-[76px] sm:w-[76px]"
+              >
+                <X size={26} weight="bold" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={capture}
+                disabled={status !== "ready" || phase !== "live"}
+                aria-label="Take photo"
+                className="group relative grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full ring-2 ring-accent transition-transform active:scale-95 disabled:opacity-40 sm:h-[76px] sm:w-[76px]"
+              >
+                <span className="h-[52px] w-[52px] rounded-full bg-accent transition-transform duration-150 group-active:scale-90 sm:h-[58px] sm:w-[58px]" />
+              </button>
+            )}
 
             {/* right cluster */}
             <div className="flex items-center gap-2">
@@ -384,6 +397,48 @@ function Pill({
     >
       {children}
     </button>
+  );
+}
+
+/* ---- Countdown timer: a visible segmented control (Off / 3s / 5s) -------- */
+function TimerSegment({
+  value,
+  onChange,
+}: {
+  value: CountdownSec;
+  onChange: (s: CountdownSec) => void;
+}) {
+  const options: { v: CountdownSec; label: string }[] = [
+    { v: 0, label: "Off" },
+    { v: 3, label: "3s" },
+    { v: 5, label: "5s" },
+  ];
+  return (
+    <div
+      role="group"
+      aria-label="Countdown timer"
+      className="inline-flex h-11 items-center gap-0.5 rounded-vibe bg-surface p-1 ring-1 ring-line"
+    >
+      {options.map((o) => {
+        const active = value === o.v;
+        return (
+          <button
+            key={o.v}
+            type="button"
+            onClick={() => onChange(o.v)}
+            aria-pressed={active}
+            aria-label={o.v === 0 ? "Countdown off" : `${o.v} second countdown`}
+            className={`rounded-[calc(var(--radius)-2px)] px-2.5 py-1.5 font-num text-[11px] transition-colors ${
+              active
+                ? "bg-accent text-accent-ink"
+                : "text-ink-dim hover:text-ink"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

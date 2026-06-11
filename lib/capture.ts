@@ -52,14 +52,23 @@ export function cropFrame(
   return canvas;
 }
 
-/** Trigger a browser download for a data-URL image. */
-export function downloadImage(dataUrl: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+/**
+ * Trigger a browser download for a data-URL image. Returns false if the browser
+ * refused the synthetic click so callers can offer a manual save fallback
+ * (notably iOS Safari, which ignores the `download` attribute).
+ */
+export function downloadImage(dataUrl: string, filename: string): boolean {
+  try {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** booth-YYYYMMDD-HHMMSS.jpg */
