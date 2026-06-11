@@ -39,8 +39,13 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
 
   const [phase, setPhase] = useState<Phase>("live");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [caption, setCaption] = useState("");
   const [countNum, setCountNum] = useState<number | null>(null);
   const [flashing, setFlashing] = useState(false);
+
+  // The raw cropped frame, kept so the caption can be re-composited onto it as
+  // the user types on the review screen without re-shooting.
+  const cropRef = useRef<HTMLCanvasElement | null>(null);
 
   // capture settings
   const [ratio, setRatio] = useState<Ratio>("1:1");
@@ -74,9 +79,21 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
       setPhase("live");
       return;
     }
-    setPhoto(frameToDataURL(crop, vibe));
+    cropRef.current = crop;
+    setCaption("");
+    setPhoto(frameToDataURL(crop, vibe, ""));
     schedule(() => setPhase("review"), flashOn ? 150 : 0);
   }, [clearTimers, schedule, flashOn, sound, ratio, facing, vibe, videoRef]);
+
+  // Re-bake the print with the live caption. Cheap: it redraws the retained crop
+  // canvas, so it's fine to run on every keystroke.
+  const changeCaption = useCallback(
+    (text: string) => {
+      setCaption(text);
+      if (cropRef.current) setPhoto(frameToDataURL(cropRef.current, vibe, text));
+    },
+    [vibe],
+  );
 
   const capture = useCallback(() => {
     if (phase !== "live" || status !== "ready") return;
@@ -103,6 +120,8 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const retake = useCallback(() => {
     clearTimers();
     setPhoto(null);
+    setCaption("");
+    cropRef.current = null;
     setCountNum(null);
     setPhase("live");
   }, [clearTimers]);
@@ -140,6 +159,7 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
   const meta = getVibe(vibe);
   const aspect = ratio === "1:1" ? "1 / 1" : "4 / 3";
   const isPurikura = vibe === "purikura";
+  const supportsCaption = vibe === "polaroid" || vibe === "vintage";
   const backdrop =
     vibe === "purikura"
       ? "vibe-candy"
@@ -197,7 +217,15 @@ export function CameraBooth({ vibe }: { vibe: VibeId }) {
       {/* ---- Stage ---- */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6">
         {phase === "review" && photo ? (
-          <Review src={photo} vibe={vibe} onRetake={retake} onKeep={keep} />
+          <Review
+            src={photo}
+            vibe={vibe}
+            caption={caption}
+            editable={supportsCaption}
+            onCaptionChange={changeCaption}
+            onRetake={retake}
+            onKeep={keep}
+          />
         ) : (
           <div className="flex w-full flex-col items-center gap-6">
             {vibe === "purikura" ? (
@@ -339,7 +367,7 @@ function VintageFrame({
   );
 }
 
-/* ---- Polaroid: white film border with a handwritten date under the photo - */
+/* ---- Polaroid: white film border, caption written on after the shot ------ */
 function PolaroidFrame({
   aspect,
   children,
@@ -347,22 +375,14 @@ function PolaroidFrame({
   aspect: string;
   children: React.ReactNode;
 }) {
-  const stamp = useMemo(
-    () =>
-      new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-    [],
-  );
   return (
     <div
-      // Real Polaroid proportions: generous, even white on the sides + top, a
-      // much thicker bottom border for the caption. Percentage padding keeps the
-      // border-to-photo ratio fixed as the frame scales.
+      // Generous, even white on the sides + top with a modestly thicker bottom.
+      // Lighter than the saved print's full caption band — the border is blank
+      // while framing (the caption is added at review and baked into the save),
+      // so a full-height bottom slab would just feel heavy here.
       className="relative w-full max-w-[min(76vh,540px)] rounded-vibe bg-surface shadow-[0_30px_70px_rgb(20_22_24/0.32)] ring-1 ring-line"
-      style={{ padding: "6% 6% 22%" }}
+      style={{ padding: "5% 5% 12%" }}
     >
       <div
         className="relative w-full overflow-hidden rounded-[2px] bg-surface-2"
@@ -370,9 +390,6 @@ function PolaroidFrame({
       >
         {children}
       </div>
-      <p className="absolute inset-x-0 bottom-[7%] -rotate-1 text-center font-display text-3xl leading-none text-ink-dim sm:text-4xl">
-        {stamp}
-      </p>
     </div>
   );
 }

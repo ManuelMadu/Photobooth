@@ -24,11 +24,11 @@ export function frameToDataURL(
 ): string {
   if (vibe === "purikura") return purikura(photo);
   if (vibe === "polaroid") return polaroid(photo, caption);
-  return vintage(photo);
+  return vintage(photo, caption);
 }
 
 /* ---- Vintage: paper print with a typewriter caption strip ---------------- */
-function vintage(photo: HTMLCanvasElement): string {
+function vintage(photo: HTMLCanvasElement, caption?: string): string {
   const iw = photo.width;
   const ih = photo.height;
   const pad = Math.round(iw * 0.055);
@@ -55,17 +55,23 @@ function vintage(photo: HTMLCanvasElement): string {
   ctx.lineWidth = Math.max(1, Math.round(iw * 0.003));
   ctx.strokeRect(pad + 0.5, pad + 0.5, iw - 1, ih - 1);
 
-  // Caption strip.
+  // Caption strip: right-aligned stars are a fixed flourish; the left label is
+  // the user's caption, falling back to the booth's name when left blank.
   const fs = Math.round(iw * 0.032);
   const cy = ih + pad + captionH / 2 + pad * 0.15;
   ctx.fillStyle = "#7a6a55";
   ctx.font = `${fs}px ${resolveFontFamily("vintage", "--font-num")}`;
   ctx.textBaseline = "middle";
   setLetterSpacing(ctx, Math.round(fs * 0.2));
-  ctx.textAlign = "left";
-  ctx.fillText("PHOTO BOOTH", pad, cy);
+
+  const stars = "★ ★ ★";
   ctx.textAlign = "right";
-  ctx.fillText("★ ★ ★", w - pad, cy);
+  ctx.fillText(stars, w - pad, cy);
+
+  const label = ((caption ?? "").trim() || "PHOTO BOOTH").toUpperCase();
+  const maxLabel = w - pad * 2 - ctx.measureText(stars).width - fs; // keep a gap
+  ctx.textAlign = "left";
+  ctx.fillText(fitText(ctx, label, maxLabel), pad, cy);
 
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 }
@@ -106,8 +112,9 @@ function polaroid(photo: HTMLCanvasElement, caption?: string): string {
   ctx.lineWidth = Math.max(1, Math.round(iw * 0.003));
   ctx.strokeRect(side + 0.5, top + 0.5, iw - 1, ih - 1);
 
-  // Handwritten caption in the bottom border. Defaults to the date.
-  const text = (caption ?? defaultCaption()).trim();
+  // Handwritten caption in the bottom border. Optional — left blank, the white
+  // film border stays clean, ready to be written on.
+  const text = (caption ?? "").trim();
   if (text) {
     const fs = Math.round(iw * 0.085);
     ctx.fillStyle = "#3a3b3d";
@@ -123,14 +130,6 @@ function polaroid(photo: HTMLCanvasElement, caption?: string): string {
   }
 
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
-}
-
-function defaultCaption(): string {
-  return new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 /** Trim a caption with an ellipsis so it never spills past the border width. */

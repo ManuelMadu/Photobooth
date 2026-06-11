@@ -15,11 +15,18 @@ import type { VibeId } from "@/lib/vibes";
 export function Review({
   src,
   vibe,
+  caption,
+  editable,
+  onCaptionChange,
   onRetake,
   onKeep,
 }: {
   src: string;
   vibe: VibeId;
+  caption: string;
+  /** Whether this vibe takes a custom caption (polaroid / vintage). */
+  editable: boolean;
+  onCaptionChange: (text: string) => void;
   onRetake: () => void;
   /** Returns false if the browser refused the download. */
   onKeep: () => boolean;
@@ -53,6 +60,9 @@ export function Review({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (saved) return;
+      // Don't hijack typing in the caption field (R / Backspace / Enter).
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
       if (e.code === "Enter") {
         e.preventDefault();
         handleKeep();
@@ -81,6 +91,25 @@ export function Review({
           className="block h-auto max-h-[64vh] w-auto max-w-[min(90vw,520px)] rounded-[4px] shadow-[0_24px_60px_rgb(0_0_0/0.22)]"
         />
       </motion.div>
+
+      {editable && (
+        <input
+          type="text"
+          value={caption}
+          onChange={(e) => onCaptionChange(e.target.value)}
+          disabled={saved}
+          maxLength={vibe === "polaroid" ? 32 : 22}
+          placeholder={
+            vibe === "polaroid" ? "Write a caption…" : "Title your print…"
+          }
+          aria-label="Photo caption"
+          className={`w-full max-w-[min(90vw,360px)] rounded-vibe bg-surface px-4 py-2.5 text-center text-ink shadow-[0_2px_10px_rgb(0_0_0/0.06)] ring-1 ring-line placeholder:text-ink-dim/60 focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 ${
+            vibe === "polaroid"
+              ? "font-display text-2xl"
+              : "font-num text-sm uppercase tracking-[0.18em]"
+          }`}
+        />
+      )}
 
       <p className="flex items-center gap-1.5 font-display text-xl text-ink sm:text-2xl">
         {vibe === "purikura" ? (
