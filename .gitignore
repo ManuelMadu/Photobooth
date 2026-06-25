@@ -42,3 +42,8 @@ next-env.d.ts
 
 # Local dev HTTPS certs
 certificates/
+
+# Local tooling config
+.claude/
+CLAUDE.md
+AGENTS.md
