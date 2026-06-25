@@ -1,20 +1,24 @@
 # Photobooth
 
-A web photobooth you run in the browser. Pick a look, let it use your camera, count down, and it snaps a photo framed in the style you chose. Built for a screen at an event, but it works just as well on a laptop.
+A web photobooth you run in the browser. Pick a look, let it use your camera, count down, and it snaps a photo framed in the style you chose. Built for a screen at an event, though it works just as well on a laptop.
 
-**[Try it live](https://photobooth-cyan-alpha.vercel.app)** — give it camera permission and pick a vibe.
+![The booth picker showing the Vintage, Polaroid, and Purikura looks](docs/picker.png)
 
-I wanted the thing to feel like a real booth, not a webcam with a filter slapped on top. So the look you pick changes everything: the colors, the type, the flash, and the frame that gets baked into the saved image. The photo you download already looks finished.
+**[Try it live](https://photobooth-cyan-alpha.vercel.app).** Give it camera permission and pick a vibe.
+
+I wanted it to feel like a real booth, not a webcam with a filter slapped on top. So the look you pick changes everything: the colors, the type, the flash, and the frame that gets baked into the saved image. The photo you download already looks finished.
 
 ## The three looks
 
-You choose one on the way in. Each one is its own little world.
+You choose one on the way in, and each one is its own little world.
 
-- **Vintage** — a warm analog photo strip. Sepia ink, curtain red, a typewriter caption. The classic mall-booth print.
-- **Polaroid** — a white instant-film border with a handwritten caption and that just-developed look. Give it a shake.
-- **Purikura** — candy pastels, bubbly type, hearts and sparkles. Tokyo arcade energy.
+**Vintage** is a warm analog photo strip. Sepia ink, curtain red, a typewriter caption, your shot framed like a classic mall-booth print.
 
-You can switch between them whenever you want and shoot again.
+**Polaroid** gives you a crisp white film border with a handwritten caption and that just-developed look. Give it a shake.
+
+**Purikura** goes full sticker booth: candy pastels, bubbly type, hearts and sparkles, the kind of Tokyo arcade energy that doesn't take itself seriously.
+
+Switch between them whenever you want and shoot again.
 
 ## How a session goes
 
@@ -26,7 +30,7 @@ You can switch between them whenever you want and shoot again.
 
 ## How it's built
 
-Next.js 15 with the App Router, React 18, and TypeScript. Tailwind v4 for styling, [Motion](https://motion.dev) for the animation, and Phosphor for icons. No backend and no database. Photos are captured and composited on the client with a canvas and never leave the browser.
+Next.js 15 with the App Router, React 18, and TypeScript. Tailwind v4 for styling, [Motion](https://motion.dev) for the animation, and Phosphor for icons. There's no backend and no database. Photos are captured and composited on the client with a canvas, and they never leave the browser.
 
 The interesting part is how the vibes work. Each vibe is a set of design tokens (color, type, frame shape) defined once in `lib/vibes.ts` and bound at runtime through a `data-vibe` attribute in `globals.css`. A small context provider holds the current choice and remembers it in `localStorage`. Adding a new look is three edits in one place: a new id, a `VIBES` entry, and a token block. Nothing else in the booth has to know it exists.
 
@@ -59,7 +63,7 @@ npm run dev
 
 Then open http://localhost:3000.
 
-One catch: browsers only hand over the camera on a secure origin. `localhost` counts, so plain `npm run dev` is fine on your own machine. If you want to open the booth from another device on your network (a phone, a tablet at an actual event), that device needs HTTPS. Drop a local cert and key in a `certificates/` folder and serve over `https://`. The folder is gitignored, so nothing private gets committed.
+One catch: browsers only hand over the camera on a secure origin. `localhost` counts, so plain `npm run dev` is fine on your own machine. If you want to open the booth from another device on your network, like a phone or a tablet at an actual event, that device needs HTTPS. Drop a local cert and key in a `certificates/` folder and serve over `https://`. The folder is gitignored, so nothing private gets committed.
 
 ## Accessibility
 
