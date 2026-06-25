@@ -2,7 +2,7 @@
 // Each vibe is a token set bound at runtime via [data-vibe] in globals.css.
 // This module is the single source of truth for vibe identity + copy.
 //
-// We're intentionally running a small, opinionated set (two for now) rather
+// We're intentionally running a small, opinionated set (three for now) rather
 // than a wide menu of mild variations. More can be added later by appending a
 // VibeId, a VIBES entry, and a [data-vibe] token block.
 

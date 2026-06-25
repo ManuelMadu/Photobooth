@@ -40,7 +40,7 @@ export default function WelcomePage() {
             Pick your booth.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
-            One photobooth, 5 themes. Choose a look and start shooting. You can
+            One photobooth, 3 themes. Choose a look and start shooting. You can
             switch it any time.
           </p>
         </header>
