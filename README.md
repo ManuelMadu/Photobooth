@@ -2,6 +2,8 @@
 
 A web photobooth you run in the browser. Pick a look, let it use your camera, count down, and it snaps a photo framed in the style you chose. Built for a screen at an event, but it works just as well on a laptop.
 
+**[Try it live](https://photobooth-git-main-manuelmadu.vercel.app)** — give it camera permission and pick a vibe.
+
 I wanted the thing to feel like a real booth, not a webcam with a filter slapped on top. So the look you pick changes everything: the colors, the type, the flash, and the frame that gets baked into the saved image. The photo you download already looks finished.
 
 ## The three looks
@@ -65,4 +67,4 @@ The booth respects `prefers-reduced-motion` and drops the entrance animations wh
 
 ## Status
 
-Working: the picker, all three looks, the camera flow, the countdown, capture, caption editing, and saving with the frame baked in. It's a front-end project, so there's nothing to deploy beyond a static host.
+Working: the picker, all three looks, the camera flow, the countdown, capture, caption editing, and saving with the frame baked in. It's a front-end project deployed on Vercel, and every push to `main` redeploys it.
